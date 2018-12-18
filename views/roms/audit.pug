@@ -1,0 +1,26 @@
+extends ../layout
+block content
+  script(src='/javascripts/roms/audit.js', type='text/javascript')
+  
+  link(rel='stylesheet', href='/tabulator/dist/css/tabulator.min.css')
+  script(src='/tabulator/dist/js/tabulator.min.js', type='text/javascript')
+
+  body
+    div#controls
+      ul
+        li
+          input#romFileShow(type="checkbox") 
+          div(class="label") Show Dat Rom File Name
+        li
+          input#sizeShow(type="checkbox") 
+          div(class="label") Show File Sizes
+        li
+          input#crcShow(type="checkbox") 
+          div(class="label") Show CRC
+        li
+          input#md5Show(type="checkbox") 
+          div(class="label") Show MD5
+        li
+          input#sha1Show(type="checkbox") 
+          div(class="label") Show SHA1
+    div#titles

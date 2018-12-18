@@ -1,0 +1,28 @@
+{
+  "name": "expressjs-no-intro-service",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "async": "^2.6.1",
+    "config": "^3.0.0",
+    "cookie-parser": "~1.4.3",
+    "crc": "^3.8.0",
+    "damerau-levenshtein-js": "^1.1.2",
+    "debug": "~2.6.9",
+    "express": "~4.16.0",
+    "fs-extra": "^7.0.1",
+    "http-errors": "~1.6.2",
+    "junk": "^2.1.0",
+    "levenshtein-edit-distance": "^2.0.3",
+    "md5-file": "^4.0.0",
+    "morgan": "~1.9.0",
+    "path": "^0.12.7",
+    "pug": "2.0.0-beta11",
+    "sha1-file": "^1.0.4",
+    "string-similarity": "^3.0.0",
+    "xml2js": "^0.4.19"
+  }
+}

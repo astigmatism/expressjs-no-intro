@@ -1,0 +1,16 @@
+{
+    "systems": {
+        "nes": {
+            "key": "nes",
+            "name": "Nintendo - Nintendo Entertainment System",
+            "datFile": "Nintendo - Nintendo Entertainment System (20181120-113332)",
+            "romFolder": "20181211"
+        },
+        "gg": {
+            "key": "gg",
+            "name": "Sega - Game Gear",
+            "datFile": "Sega - Game Gear (20181017-213854)",
+            "romFolder": "20181211"
+        }
+    }
+}
