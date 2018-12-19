@@ -21,7 +21,7 @@ const config = require('config');
 router.get('/', function(req, res, next) {
 
     res.render('index', {
-        title: 'No-Intro Service',
+        title: 'No-Intro',
         window: {
             application: {
                 systems: config.get('systems')

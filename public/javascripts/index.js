@@ -14,7 +14,14 @@
                         urlField: 'id',
                         target: '_blank'
                     }
+                },
+                { title:'Box Front Audit', field:'boxfrontaudit', formatter: 'link', formatterParams: {
+                    label: 'audit',
+                    urlPrefix: '/boxes/audit/front/',
+                    urlField: 'id',
+                    target: '_blank'
                 }
+            }
             ]
         });
 

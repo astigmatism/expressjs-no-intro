@@ -7,20 +7,35 @@ block content
 
   body
     div#controls
+      h3 Rom File Audit
+      p.
+        This process compares a dat file against a set of rom files the result of which allows us to generate a "master file" which establishes
+        the relationship between a game's title and its playable file. The most recent No-Intro dat files can be downloaded from #[a( href='https://datomatic.no-intro.org/?page=download' ) https://datomatic.no-intro.org].
+      p.
+        Update the default.json config file with the dat file you wish to parse from.
+      p. 
+        Use this additional controls to reveal more details from both the dat file and the resulting file set. Remember that a true match between
+        dat and file would be the hashes:
       ul
         li
           input#romFileShow(type="checkbox") 
           div(class="label") Show Dat Rom File Name
         li
           input#sizeShow(type="checkbox") 
-          div(class="label") Show File Sizes
+          div(class="label") Show File Size Comparison
         li
           input#crcShow(type="checkbox") 
-          div(class="label") Show CRC
+          div(class="label") Show CRC Comparison
         li
           input#md5Show(type="checkbox") 
-          div(class="label") Show MD5
+          div(class="label") Show MD5 Comparison
         li
           input#sha1Show(type="checkbox") 
-          div(class="label") Show SHA1
+          div(class="label") Show SHA1 Comparison
+      div(class="footer")
+        p.
+          After making all modifications, create a master file with this button. The resulting file can be found in /media/masterfiles/[system]
+          with its filename being a timestamp of its creation date (this way we do not overwrite older creations).
+        input#create(type="button", value="Create Master File")
+        div#processing
     div#titles

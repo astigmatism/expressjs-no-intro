@@ -1,6 +1,7 @@
 const dl = require('damerau-levenshtein-js');
 const levenshtein = require('levenshtein-edit-distance');
 var stringSimilarity = require('string-similarity');
+const async = require('async');
 
 module.exports = new (function() {
 
@@ -23,38 +24,43 @@ module.exports = new (function() {
         return levenshtein(this, string);
     };
 
-    this.FindBestMatchBetweenLists = function(lista, listb, topScorersCount, _sanitizeFunction) {
+    this.FindBestMatchBetweenLists = function(seta, setb, topScorersCount, callback) {
 
-        var matrix = BuildScoreMatrix(lista, listb, _sanitizeFunction);
-        //var matrix = RemoveDuplicates(matrix);
-        var top = TopScorers(matrix, topScorersCount || 15);
+        var matrix = BuildScoreMatrix(seta, setb, (err, matrix) => {
+            if (err) return callback(err);
 
-        //clean up
-        var results = {};
-        for (var item in matrix) {
-            if (matrix[item].length > 0) {
-                results[item] = matrix[item][0];
-            }
-        }
-        return {
-            results: results,
-            top: top
-        }
+            var dupes = FindDuplicates(matrix);
+            //var matrix = RemoveDuplicates(matrix);
+            var top = TopScorers(matrix, topScorersCount || 15);
+
+            //clean up
+            var results = {};
+            for (var item in matrix) {
+                if (matrix[item].length > 0) {
+                    results[item] = matrix[item][0];
+                }
+            };
+
+            return callback(null, results, top, dupes);
+        });
     };
 
-    var BuildScoreMatrix = function(lista, listb, _sanitizeFunction) {
+    var BuildScoreMatrix = function(seta, setb, callback) {
 
         results = {};
+        var lista = seta.set;
+        var listb = setb.set
 
-        listb.forEach(itemb => {
+        async.forEach(listb, function(itemb, nextb) {
 
             console.log('[Score Matrix] Considering item {' + itemb + '}');
 
-            var sanitizedItemb = _sanitizeFunction ? _sanitizeFunction(itemb) : itemb;
+            var sanitizedItemb = setb.sanitize ? setb.sanitize(itemb) : itemb;
             results[itemb] = [];
 
-            lista.forEach(itema => {
-                var sanitizedItema = _sanitizeFunction ? _sanitizeFunction(itema) : itema;
+            async.forEach(lista, function(itema, nexta) {
+
+                var sanitizedItema = seta.sanitize ? seta.sanitize(itema) : itema;
 
                 result = {
                     item: itema,
@@ -69,15 +75,35 @@ module.exports = new (function() {
                 }
                 else {
                     //walk array until score is higher, then insert before and exit
-                    for(var i = 0, len = results[itemb].length; i < len; ++i) {
-                        if (results[itemb][i].score > result.score) continue;
-                        results[itemb].splice(i, 0, result);
-                        break;
-                    }
+                    var inserted = false;
+
+                    //walk backwards
+                    for(var i = results[itemb].length - 1; i > -1; --i) {
+
+                        //if current value is greater, insert behind
+                        if (results[itemb][i].score > result.score) {
+                            results[itemb].splice(i + 1, 0, result);
+                            break;
+                        }
+                        else {
+                            //if the score is greater than everythng in the array, insert at front
+                            if (i == 0) {
+                                results[itemb].splice(0, 0, result);
+                            }
+                        }
+                    };
                 }
+
+                nexta();
+            }, err2 => {
+                if (err2) return callback(err2);
+                nextb();
             });
+        }, err=> {
+            if (err) return callback(err);
+            
+            return callback(null, results);
         });
-        return results;
     };
 
     var RemoveDuplicates = function(matrix) {
@@ -125,126 +151,27 @@ module.exports = new (function() {
         for (var item in matrix) {
 
             result[item] = [];
-            for (var i = 0, len = result[item].length; i < len || i < limit; ++i)
+            for (var i = 0, len = matrix[item].length; i < len && i < limit; ++i)
                 result[item].push(matrix[item][i]);
         }
         return result;
     };
-    var BuildScoreMatrix_ = function(lista, listb, _sanitizeFunction) {
+    
+    var FindDuplicates = function(matrix) {
 
-        var results = {};
-
-        //lista is primary (like files) and must find a match to listb with a score.
-        lista.forEach(itema => {
-
-            console.log('[List Matching] Considering item {' + itema + '}');
-
-            var sanitizedItema = _sanitizeFunction ? _sanitizeFunction(itema) : itema;
-            
-            //get a score for this item against all others in the other list
-            var scores = {};
-            listb.forEach(itemb => {
-                var sanitizedItemb = _sanitizeFunction ? _sanitizeFunction(itemb) : itemb;
-                
-                //var score = sanitizedItema.levenstein(sanitizedItemb);
-                var score = dl.distance(sanitizedItema, sanitizedItemb);
-                
-                scores[itemb] = score;
-
-                //how does the score for this item compare to that of the results?
-                if (results[itemb]) {
-
-                    //if this score is lower, take the place
-                    if (score < results[itemb].score) {
-                        results[itemb] = {
-                            item: itema,
-                            score: score
-                        }
-                    }
-
+        var dupes = {};
+        for (var item in matrix) {
+            var results = matrix[item];
+            if (results.length > 0) {
+                if (!dupes.hasOwnProperty(results[0].item)) {
+                    dupes[results[0].item] = [];
                 }
-                else {
-                    //since no score is recorded yet, make this best match
-                    results[itemb] = {
-                        item: itema,
-                        score: score
-                    }
-                }
-            });
-        });
-        return results;
-    };
-
-    this.ListCompare = function(lista, listb, _sanitizeFunction) {
-
-        //two lists in which one or the other could be greater
-        
-        //first find the best matches in list b from list a
-        var atobScores = {};
-        var btoaScores = {};
-
-        console.log('[List Compare] Buliding Score Matrix...');
-
-        lista.forEach(itema => {
-
-            atobScores[itema] = {};
-            var sanitizedItema = _sanitizeFunction ? _sanitizeFunction(itema) : itema;
-
-            
-            listb.forEach(itemb => {
-
-                var sanitizedItemb = _sanitizeFunction ? _sanitizeFunction(itemb) : itemb;
-                
-                //choose the scoring algorithum:
-                //var score = dl.distance(sanitizedItema, sanitizedItemb);
-                var score = sanitizedItema.levenstein(sanitizedItemb);
-
-                atobScores[itema][itemb] = score;
-            });
-        });
-
-        //find the lowest score for each item in lista
-        var matches = {};
-        for (itema in atobScores) {
-
-            var match = { item: null, score: -1 };
-
-            for (itemb in atobScores[itema]) {
-                
-                var score = atobScores[itema][itemb];
-
-                if (score < match.score || match.score == -1) {
-
-                    console.log('[List Compare] Low score of ' + score + ' for {' + itema + '} -> {' + itemb + '}');
-
-                    //does any other item in lista score lower to claim this match?
-                    lowestscore = true;
-                    for (itema2 in atobScores) {
-                        var otherscore = atobScores[itema2][itemb];
-                        
-                        if (otherscore < score) {
-                            lowestscore = false;
-                            console.log('[List Compare] Lower score of ' + otherscore + ' for {' + itema2 + '} -> {' + itemb + '}');
-                            break;
-                        }
-                    }
-
-                    if (lowestscore) {
-                        match.item = itemb;
-                        match.score = score;
-                    }
-                }
+                dupes[results[0].item].push({
+                    item: item,
+                    score: results[0].score
+                });
             }
-
-            if (match.score != -1) {
-                matches[itema] = {
-                    item: match.item,
-                    score: match.score
-                };
-            }
-
-        }
-
-        return matches;
-    };
+        };
+        return dupes;
+    }
 });
