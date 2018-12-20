@@ -7,17 +7,17 @@
         var table = new Tabulator('#systems', {
             layout:'fitColumns',
             columns: [
-                { title:'Name', field:'name', sorter:'string', width:400, editor:true },
+                { title:'System Name', field:'name', sorter:'string', width:400, editor:true },
                 { title:'Rom Audit', field:'romaudit', formatter: 'link', formatterParams: {
                         label: 'audit',
-                        urlPrefix: '/roms/audit/',
+                        urlPrefix: '/dev/roms/audit/',
                         urlField: 'id',
                         target: '_blank'
                     }
                 },
                 { title:'Box Front Audit', field:'boxfrontaudit', formatter: 'link', formatterParams: {
                     label: 'audit',
-                    urlPrefix: '/boxes/audit/front/',
+                    urlPrefix: '/dev/boxes/audit/front/',
                     urlField: 'id',
                     target: '_blank'
                 }

@@ -3,6 +3,8 @@ const config = require('config');
 const path = require('path');
 const async = require('async');
 const junk = require('junk');
+const pako = require('pako');
+
 const MasterFiles = require('./masterfiles');
 const Application = require('./application');
 
@@ -36,42 +38,46 @@ module.exports = new (function() {
 
         files = files.filter(junk.not); //removes DS_Store
 
-        MasterFiles.Get(system, (err, data) => {
-            if (err) return callback(err);
+        MasterFiles.Get(system, 'roms', (data) => {
+            MasterFiles.Get(system, 'boxes-' + type, (masterfile) => {
 
-            var titles = [];
-            for (var title in data.data) {
-                titles.push(title);
-            }
+                if (!data) return callback('no roms master file for ' + system + ' created yet');
 
-            Application.FindBestMatchBetweenLists({ set: files, sanitize: SanitizeFiles}, {set: titles, sanitize: SanitizeTitles}, 100, (err, matrix, top, dupes) => {
-                if (err) return callback(err);
+                var titles = [];
+                for (var title in data.data) {
+                    titles.push(title);
+                }
 
-                var result = [];
-                async.forEachOf(matrix, (value, key, next) => {
-
-                    //build an understanding of exclusivity - if a duplicate dat entry matched a file,
-                    //we only want to inform on the table if match has a better score with the other dupe
-                    otherMatchHasBetterScore = false;
-                    if (dupes.hasOwnProperty(value.item)) {
-                        dupes[value.item].forEach(item => {
-                            if (item.score > value.score) otherMatchHasBetterScore = true;
-                        });
-                    }
-
-                    result.push({
-                        id: key,
-                        title: key,
-                        auditfile: value.item,
-                        auditscore: value.score,
-                        exclusive: otherMatchHasBetterScore ? 'Click to see other titles' : ''
-                    });
-
-                    next();
-                }, err => {
+                Application.FindBestMatchBetweenLists({ set: files, sanitize: SanitizeFiles}, {set: titles, sanitize: SanitizeTitles}, 100, (err, matrix, top, dupes) => {
                     if (err) return callback(err);
 
-                    return callback(null, result, top, dupes);
+                    var result = [];
+                    async.forEachOf(matrix, (value, key, next) => {
+
+                        //build an understanding of exclusivity - if a duplicate dat entry matched a file,
+                        //we only want to inform on the table if match has a better score with the other dupe
+                        otherMatchHasBetterScore = false;
+                        if (dupes.hasOwnProperty(value.item)) {
+                            dupes[value.item].forEach(item => {
+                                if (item.score > value.score) otherMatchHasBetterScore = true;
+                            });
+                        }
+
+                        result.push({
+                            id: key,
+                            title: key,
+                            auditfile: value.item,
+                            auditscore: value.score,
+                            exclusive: otherMatchHasBetterScore ? 'Click to see other titles' : '',
+                            masterfilematch: (masterfile) ? masterfile.data[key] : ''
+                        });
+
+                        next();
+                    }, err => {
+                        if (err) return callback(err);
+
+                        return callback(null, result, top, dupes);
+                    });
                 });
             });
         });
@@ -89,4 +95,21 @@ module.exports = new (function() {
         name = name.replace(/[\W\(.*\)]/g, ''); //strip out all non-words
         return name;
     };
+
+    //just get the raw image src from the cdn location of choice. I use this for the media browser
+    this.GetAuditSrc = function(system, type, filename, callback) {
+
+        var boxesPath = path.join(boxesFrontRoot, system, filename);
+        switch (type)
+        {
+            case 'full':
+                //TODO
+        }
+
+        fs.readFile(boxesPath, (err, buffer) => {
+            if (err) return callback(err)
+            return callback(null, buffer);
+        });
+    };
+
 });

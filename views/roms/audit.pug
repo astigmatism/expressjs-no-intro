@@ -1,13 +1,14 @@
 extends ../layout
 block content
   script(src='/javascripts/roms/audit.js', type='text/javascript')
+  link(rel='stylesheet', href='/stylesheets/roms.css')
   
   link(rel='stylesheet', href='/tabulator/dist/css/tabulator.min.css')
   script(src='/tabulator/dist/js/tabulator.min.js', type='text/javascript')
 
   body
     div#controls
-      h3 Rom File Audit
+      h1 Rom File Audit
       p.
         This process compares a dat file against a set of rom files the result of which allows us to generate a "master file" which establishes
         the relationship between a game's title and its playable file. The most recent No-Intro dat files can be downloaded from #[a( href='https://datomatic.no-intro.org/?page=download' ) https://datomatic.no-intro.org].
@@ -33,9 +34,6 @@ block content
           input#sha1Show(type="checkbox") 
           div(class="label") Show SHA1 Comparison
       div(class="footer")
-        p.
-          After making all modifications, create a master file with this button. The resulting file can be found in /media/masterfiles/[system]
-          with its filename being a timestamp of its creation date (this way we do not overwrite older creations).
         input#create(type="button", value="Create Master File")
         div#processing
     div#titles

@@ -16,18 +16,9 @@
  */
 var express = require('express');
 var router = express.Router();
-const config = require('config');
 
 router.get('/', function(req, res, next) {
-
-    res.render('index', {
-        title: 'No-Intro',
-        window: {
-            application: {
-                systems: config.get('systems')
-            }
-        }
-    });
+    res.status(200).end();
 });
 
 module.exports = router;

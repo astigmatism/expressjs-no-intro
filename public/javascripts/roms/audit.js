@@ -6,6 +6,7 @@
     var _data = window.application.data;
     var _top = window.application.top;
     var _dupes = window.application.dupes;
+    var _masterfile = window.application.masterfile;
     var _tableData = [];
 
     $(document).ready(function() {
@@ -17,6 +18,7 @@
                 { title:'Dat Rom File', field:'datname', sorter:'string', visible: false, width:400 },
                 { title:'Audit File Match', field:'auditfile', width:400, headerFilter: true, editor:"select", editorParams: PopulateAuditFiles},
                 { title:'Other Dat Titles Which Claim Match', field:'exclusive', editor:"select", editorParams: PopulateExclusive },
+                { title:'Current Masterfile Assignment', field:'masterfilematch', sorter: 'string'},
                 { title:'Audit File Score', field:'auditscore', sorter: 'number'},
                 { title:'Dat Size', field:'datsize', sorter:'number', visible: false },
                 { title:'Audit File Size', field:'auditsize', sorter: 'number', visible: false},
@@ -51,7 +53,7 @@
             });
 
             $.ajax({
-                url: '/roms/audit/' + _system,
+                url: '/dev/roms/audit/' + _system,
                 method: 'POST',
                 data: {
                     tableData: JSON.stringify(titleToFile)

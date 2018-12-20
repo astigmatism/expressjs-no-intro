@@ -6,6 +6,8 @@
     var _data = window.application.data;
     var _top = window.application.top;
     var _dupes = window.application.dupes;
+    var _type = window.application.type;
+    var _masterfile = window.application.masterfile;
 
     $(document).ready(function() {
         
@@ -15,8 +17,9 @@
                 { title:'Master File Title', field:'title', sorter:'string', headerFilter: true, width:400 },
                 { title:'Audit File Match', field:'auditfile', width:400, headerFilter: true, editor:"select", editorParams: PopulateAuditFiles, cellEdited: FileCellEditted},
                 { title:'Other Titles Which Claim Match', field:'exclusive', editor:"select", editorParams: PopulateExclusive },
+                { title:'Current Masterfile Assignment', field:'masterfilematch', sorter: 'string'},
                 { title:'Audit File Score', field:'auditscore', sorter: 'number'},
-                { title:'Preview', field:'preview', formatter: ImagePreview},
+                { title:'Preview', field:'preview', width: 150, formatter: ImagePreview},
                 { title:'Remove Association', formatter: RemoveColumnContent, width: 150, align: 'center', cellClick: RemoveColumnClick}
             ],
             data: _data
@@ -28,19 +31,23 @@
             $button.attr('disabled', 'disabled');
             $('#processing').text('Working...');
             
-            //TODO: massage data back to server
+            var titleToFile = {};
+            _table.getData().forEach(data => {
+                titleToFile[data.title] = data.auditfile; //also removes file ext
+            });
 
-            // $.ajax({
-            //     url: '/boxes/audit/' + _system,
-            //     method: 'POST',
-            //     data: {
-            //         tableData: JSON.stringify(titleToFile)
-            //     },
-            //     complete: function() {
-            //         $button.removeAttr('disabled');
-            //         $('#processing').text('Complete');
-            //     }
-            // });
+            $.ajax({
+                url: '/dev/boxes/audit/' + _system,
+                method: 'POST',
+                data: {
+                    type: _type,
+                    tableData: JSON.stringify(titleToFile)
+                },
+                complete: function() {
+                    $button.removeAttr('disabled');
+                    $('#processing').text('Complete');
+                }
+            });
         });
     });
 
@@ -51,7 +58,10 @@
         //onRendered - function to call when the formatter has been rendered
 
         var file = cell.getRow().getData().auditfile;
-        return '<img src="' + file + '" height="50px" />';
+        if (file == '') {
+            return '';
+        }
+        return '<a href="/dev/boxes/media/' + _type + '/' + _system + '/' + file + '" target="_blank"><img src="/dev/boxes/media/' + _type + '/' + _system + '/' + file + '" height="70px" /></a>';
     };
 
     //this function populates the select box when "Audit File Match" is clicked. To be used to select correct match from all top scorers
@@ -70,6 +80,7 @@
     var RemoveColumnClick = function(e, cell) {
         //alert("Printing row data for: " + cell.getRow().getData().datname);
         cell.getRow().update({ auditfile:''});
+        cell.getRow().reformat();
     };
 
     var RemoveColumnContent = function(cell, formatterParams, onRendered) { //plain text value
@@ -98,7 +109,8 @@
 
     var FileCellEditted = function(cell) {
 
-        //TODO update preview value
+        console.log('file cell editted');
+        cell.getRow().reformat();
     };
 
 })();

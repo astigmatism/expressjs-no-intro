@@ -17,10 +17,20 @@
 var express = require('express');
 var router = express.Router();
 const config = require('config');
-const Boxes = require('../server/boxes');
+const MasterFiles = require('../server/masterfiles');
 
 router.get('/', function(req, res, next) {
-    res.status(200).end();
+
+    var systems = config.get('systems');
+    
+    res.render('index', {
+        title: 'No-Intro',
+        window: {
+            application: {
+                systems: systems
+            }
+        }
+    });
 });
 
 module.exports = router;

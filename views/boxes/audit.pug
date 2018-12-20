@@ -1,11 +1,15 @@
 extends ../layout
 block content
   script(src='/javascripts/boxes/audit.js', type='text/javascript')
-  
+  link(rel='stylesheet', href='/stylesheets/boxes.css')
+
   link(rel='stylesheet', href='/tabulator/dist/css/tabulator.min.css')
   script(src='/tabulator/dist/js/tabulator.min.js', type='text/javascript')
 
   body
     div#controls
-      h3 Box Front Audit
+      h1 Box Front Audit
+      div(class="footer")
+        input#create(type="button", value="Create Master File")
+        div#processing
     div#titles

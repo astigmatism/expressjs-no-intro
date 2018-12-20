@@ -17,60 +17,9 @@
 var express = require('express');
 var router = express.Router();
 const config = require('config');
-const Roms = require('../server/roms');
-const MasterFiles = require('../server/masterfiles');
 
-router.get('/audit/:system', function(req, res, next) {
-
-    var system = req.params.system;
-    var resultsFilter = req.query.filter;
-
-    if (!system) {
-        return res.status(400).end('err 0');
-    }
-
-    Roms.Audit(system, (err, data, topScorers, dupes) => {
-
-        if (err) return res.status(500).end('err 2');
-
-        res.render('roms/audit', {
-            title: 'Rom File Audit: ' + system,
-            window: {
-                application: {
-                    system: system,
-                    data: data,
-                    top: topScorers,
-                    dupes: dupes
-                }
-            }
-        });
-    }, resultsFilter);
-});
-
-router.post('/audit/:system', function(req, res, next) {
-
-    var system = req.params.system;
-    var tableData = req.body.tableData;
-
-    if (!system) {
-        return res.status(400).end('err 0');
-    }
-    if (!tableData) {
-        return res.status(400).end('err 1');
-    }
-    try {
-        tableData = JSON.parse(tableData);
-    }
-    catch(e) {
-        return res.status(400).end('err 2');
-    }
-
-    MasterFiles.CreateMasterFile(system, tableData, err => {
-        if (err) {
-            return res.status(500).json(err);
-        }
-        return res.status(200).json();
-    });
+router.get('/', function(req, res, next) {
+    res.status(200).end();
 });
 
 module.exports = router;

@@ -1,0 +1,26 @@
+.tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+    white-space: normal;
+}
+
+#controls {
+    background-image: linear-gradient(lightblue,lightcyan);
+    padding: 10px;
+    font-size: 12px;
+}
+
+#controls p {
+    padding: 5px 0px;
+}
+
+#controls ul {
+    list-style: none;
+}
+
+#controls div.label {
+    display: inline;
+    margin-left: 5px;
+}
+
+#controls div.footer {
+    margin: 10px 0px;
+}
