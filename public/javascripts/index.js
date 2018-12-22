@@ -16,8 +16,22 @@
                     }
                 },
                 { title:'Box Front Audit', field:'boxfrontaudit', formatter: 'link', formatterParams: {
+                        label: 'audit',
+                        urlPrefix: '/dev/boxes/audit/front/',
+                        urlField: 'id',
+                        target: '_blank'
+                    }
+                },
+                { title:'Title Screen Audit', field:'titlescreenaudit', formatter: 'link', formatterParams: {
+                        label: 'audit',
+                        urlPrefix: '/dev/screens/audit/title/',
+                        urlField: 'id',
+                        target: '_blank'
+                    }
+                },
+                { title:'Screenshot Audit', field:'screenshotaudit', formatter: 'link', formatterParams: {
                     label: 'audit',
-                    urlPrefix: '/dev/boxes/audit/front/',
+                    urlPrefix: '/dev/screens/audit/shots/',
                     urlField: 'id',
                     target: '_blank'
                 }

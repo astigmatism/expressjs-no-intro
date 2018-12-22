@@ -20,43 +20,44 @@ const config = require('config');
 const Boxes = require('../server/boxes');
 const MasterFiles = require('../server/masterfiles');
 
-router.get('/audit/:type/:system', function(req, res, next) {
+router.get('/audit/:boxType/:system', function(req, res, next) {
 
-    var type = req.params.type;
+    var boxType = req.params.boxType;
     var system = req.params.system;
 
-    if (!type) {
+    if (!boxType) {
         return res.status(400).end('err 0');
     }
     if (!system) {
         return res.status(400).end('err 1');
     }
 
-    Boxes.Audit(system, type, (err, results, top, dupes) => {
+    Boxes.Audit(system, boxType, (err, tableData, topFilenameScoresForThisDatEntry, multipleDatEnriesWhichClaimMatchToOneFile, masterfileDetails) => {
         if (err) return res.status(500).end(err);
 
         res.render('boxes/audit', {
-            title: 'Box Audit: ' + system,
+            title: 'Box Audit: ' + boxType + ' for ' + system,
             window: {
                 application: {
                     system: system,
-                    type: type,
-                    data: results,
-                    top: top,
-                    dupes: dupes
+                    boxType: boxType,
+                    tableData: tableData,
+                    masterfileDetails: masterfileDetails,
+                    topFilenameScoresForThisDatEntry: topFilenameScoresForThisDatEntry,
+                    multipleDatEnriesWhichClaimMatchToOneFile: multipleDatEnriesWhichClaimMatchToOneFile
                 }
             }
         });
     });
 });
 
-router.get('/media/:type/:system/:filename', (req, res, next) => {
+router.get('/media/:boxType/:system/:filename', (req, res, next) => {
 
     var system = req.params.system;
-    var type = req.params.type;
+    var boxType = req.params.boxType;
     var filename = req.params.filename;
 
-    if (!type) {
+    if (!boxType) {
         return res.status(400).end('err 0');
     }
     if (!system) {
@@ -66,7 +67,7 @@ router.get('/media/:type/:system/:filename', (req, res, next) => {
         return res.status(400).end('err 2');
     }
 
-    Boxes.GetAuditSrc(system, type, filename, (err, imageBuffer) => {
+    Boxes.GetAuditPreview(system, boxType, filename, (err, imageBuffer) => {
         if (err) return res.status(500).end();
         res.status(200).end(imageBuffer, 'buffer');
     });
@@ -76,7 +77,7 @@ router.post('/audit/:system', function(req, res, next) {
 
     var system = req.params.system;
     var tableData = req.body.tableData;
-    var type = req.body.type;
+    var boxType = req.body.boxType;
 
     if (!system) {
         return res.status(400).end('err 0');
@@ -84,7 +85,7 @@ router.post('/audit/:system', function(req, res, next) {
     if (!tableData) {
         return res.status(400).end('err 1');
     }
-    if (!type) {
+    if (!boxType) {
         return res.status(400).end('err 2');
     }
     try {
@@ -94,7 +95,7 @@ router.post('/audit/:system', function(req, res, next) {
         return res.status(400).end('err 3');
     }
 
-    MasterFiles.CreateBoxesMasterFile(system, type, tableData, err => {
+    MasterFiles.CreateBoxesMasterFile(system, boxType, tableData, err => {
         if (err) {
             return res.status(500).json(err);
         }

@@ -3,11 +3,10 @@
     var _self = this;
     var _table;
     var _system = window.application.system;
-    var _data = window.application.data;
-    var _top = window.application.top;
-    var _dupes = window.application.dupes;
+    var _tableData = window.application.tableData;
+    var _topFilenameScoresForThisDatEntry = window.application.topFilenameScoresForThisDatEntry;
+    var _multipleDatEnriesWhichClaimMatchToOneFile = window.application.multipleDatEnriesWhichClaimMatchToOneFile;
     var _masterfile = window.application.masterfile;
-    var _tableData = [];
 
     $(document).ready(function() {
         
@@ -16,13 +15,14 @@
             columns: [
                 { title:'Dat Title', field:'dattitle', sorter:'string', headerFilter: true, width:400 },
                 { title:'Dat Rom File', field:'datname', sorter:'string', visible: false, width:400 },
-                { title:'Audit File Match', field:'auditfile', width:400, headerFilter: true, editor:"select", editorParams: PopulateAuditFiles},
-                { title:'Other Dat Titles Which Claim Match', field:'exclusive', editor:"select", editorParams: PopulateExclusive },
-                { title:'Current Masterfile Assignment', field:'masterfilematch', sorter: 'string'},
+                { title:'Audit File Match', field:'auditfile', width:400, headerFilter: true, editor:"select", editorParams: PopulateAuditFiles, cellEdited: FileCellEditted},
+                { title:'Other Dat Titles Which Claim Match', field:'othermatches', editor:'select', editorParams: PopulateOtherMatchesSelect, formatter: PopulateOtherMatchesValue },
                 { title:'Audit File Score', field:'auditscore', sorter: 'number'},
+                { title:'Current Masterfile Assignment', field:'masterfileassignment', sorter: 'string', formatter: MasterfileMatch},
+                { title:'MstFile Match', field:'masterfilematch', width:90,  align:'center', formatter: 'tickCross', sorter:'boolean' },
                 { title:'Dat Size', field:'datsize', sorter:'number', visible: false },
                 { title:'Audit File Size', field:'auditsize', sorter: 'number', visible: false},
-                { title:'File Size Difference', field:'auditdiff', sorter: 'number'},
+                { title:'File Size Diff', field:'auditdiff', width:100, sorter: 'number'},
                 { title:'Dat CRC', field:'datcrc', visible: false},
                 { title:'Audit CRC', field:'auditcrc', visible: false},
                 { title:'Dat MD5', field:'datmd5', visible: false},
@@ -31,7 +31,7 @@
                 { title:'Audit SHA1', field:'auditsha1', visible: false},
                 { title:'Remove Association', formatter: RemoveColumnContent, width: 150, align: 'center', cellClick: RemoveColumnClick}
             ],
-            data: _data
+            data: _tableData
         });
 
         //add checkboxes for show/hide
@@ -90,31 +90,110 @@
         var name = cell.getRow().getData().datname;
         var options = {};
 
-        _top[name].forEach(match => {
-            options[match.item] = match.item + ' {' + match.score.toPrecision(5) + '}';
+        _topFilenameScoresForThisDatEntry[name].forEach(match => {
+            options[match.filename] = match.filename + ' {' + match.score.toPrecision(5) + '}';
         });
 
         return options;
     };
 
-    var PopulateExclusive = function(cell) {
+    var FileCellEditted = function(cell) {
+
+        //with an auditfile change, the _multipleDatEnriesWhichClaimMatchToOneFile has now changed
+
+        var datTitle = cell.getRow().getData().dattitle;
+        var oldAuditFile = cell.getOldValue();
+        var newAuditFile = cell.getValue();
+
+
+        //remove old position
+        //if it exists there, get it
+        if (_multipleDatEnriesWhichClaimMatchToOneFile[oldAuditFile]) {
+            var results = _multipleDatEnriesWhichClaimMatchToOneFile[oldAuditFile].PopObjectFromArray(datTitle, 'title');
+            _multipleDatEnriesWhichClaimMatchToOneFile[oldAuditFile] = results[0];
+            objectToInsert = results[1];
+        }
+        else {
+            //otherwise create it. since we can't run a score on this one, just set it to 1
+            objectToInsert = {
+                title: datTitle,
+                score: 1
+            };
+        }
+
+        if (objectToInsert) {
+            if (!_multipleDatEnriesWhichClaimMatchToOneFile.hasOwnProperty(newAuditFile)) {
+                _multipleDatEnriesWhichClaimMatchToOneFile[newAuditFile] = [];
+            }
+
+            _multipleDatEnriesWhichClaimMatchToOneFile[newAuditFile] = _multipleDatEnriesWhichClaimMatchToOneFile[newAuditFile].ObjectArraySortedInsert(objectToInsert, 'score');
+
+            //must also update the other row(s) which claim credit to this match
+            cell.getTable().getRows().forEach(row => {
+                if (row.getData().auditfile == newAuditFile) {
+                    row.reformat();
+                }
+            });
+        }
+        cell.getRow().reformat();
+    };
+
+    var PopulateOtherMatchesValue = function(cell) {
+
+        var auditfile = cell.getRow().getData().auditfile;
+
+        //if it doesn't even exist
+        if (!_multipleDatEnriesWhichClaimMatchToOneFile.hasOwnProperty(auditfile)) {
+            return '';
+        }
+
+        //if there are more matches than just the current
+        if (_multipleDatEnriesWhichClaimMatchToOneFile[auditfile].length == 1) {
+            return '';
+        }
+
+        return 'They exist, click to see which...';
+    };
+
+    var PopulateOtherMatchesSelect = function(cell) {
 
         var title = cell.getRow().getData().dattitle;
         var auditfile = cell.getRow().getData().auditfile;
 
         var options = {};
         
-        if (!_dupes.hasOwnProperty(auditfile)) {
+        if (!_multipleDatEnriesWhichClaimMatchToOneFile.hasOwnProperty(auditfile)) {
             console.log('The audit file has already changed from its original definition');
             return;
         }
 
-        _dupes[auditfile].forEach(match => {
+        _multipleDatEnriesWhichClaimMatchToOneFile[auditfile].forEach(match => {
             if (match.title != title) {
                 options[match.item] = match.title + ' {' + match.score.toPrecision(5) + '}';
             }
         });
         return options;
+    };
+
+    var MasterfileMatch = function(cell, formatterParams, onRendered) {
+
+        //cell - the cell component
+        //formatterParams - parameters set for the column
+        //onRendered - function to call when the formatter has been rendered
+
+        var row = cell.getRow();
+        var rowData = row.getData();
+
+        if (rowData.dattitle == rowData.masterfileassignment) {
+            row.update({
+                masterfilematch: true
+            });
+            return cell.getValue();
+        }
+        row.update({
+            masterfilematch: false
+        });
+        return cell.getValue();
     };
 
 })();

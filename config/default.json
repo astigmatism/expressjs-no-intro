@@ -14,6 +14,11 @@
             "key": "sms",
             "name": "Sega - Master System - Mark III",
             "datFile": "Sega - Master System - Mark III (20181017-202353)"
+        },
+        "vb": {
+            "key": "vb",
+            "name": "Nintendo - Virtual Boy",
+            "datFile": "Nintendo - Virtual Boy (20181031-211438)"
         }
     }
 }

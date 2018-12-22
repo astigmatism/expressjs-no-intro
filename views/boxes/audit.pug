@@ -8,8 +8,12 @@ block content
 
   body
     div#controls
-      h1 Box Front Audit
-      div(class="footer")
-        input#create(type="button", value="Create Master File")
+      - boxTypeLabel = window.application.boxType.charAt(0).toUpperCase() + window.application.boxType.slice(1);
+      img(src="/images/systems/" + window.application.system + "/logo.png", height="50px")
+      h1 Boxes Audit: #{boxTypeLabel}
+      div(class="buttons")
+        input#create(type="button", value="Create Master File") 
         div#processing
+      p Comparing the Dat file against the existing masterfile: #{window.application.masterfileDetails}
+
     div#titles

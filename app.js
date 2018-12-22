@@ -15,6 +15,7 @@ var boxesRoutes = require('./routes/boxes');
 var indexRoutesDev = require('./routes-dev/index');
 var romsRoutesDev = require('./routes-dev/roms');
 var boxesRoutesDev = require('./routes-dev/boxes');
+var screensRoutesDev = require('./routes-dev/screens');
 
 var app = express();
 
@@ -50,6 +51,7 @@ if (app.get('env') == 'development') {
   app.use('/dev', indexRoutesDev);
   app.use('/dev/roms', romsRoutesDev);
   app.use('/dev/boxes', boxesRoutesDev);
+  app.use('/dev/screens', screensRoutesDev);
 }
 
 // catch 404 and forward to error handler

@@ -21,6 +21,11 @@
     margin-left: 5px;
 }
 
-#controls div.footer {
+#controls div.buttons {
     margin: 10px 0px;
+}
+
+#controls h1, #controls img {
+    display: inline-block;
+    margin-right: 10px;
 }

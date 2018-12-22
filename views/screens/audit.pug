@@ -1,0 +1,19 @@
+extends ../layout
+block content
+  script(src='/javascripts/screens/audit.js', type='text/javascript')
+  link(rel='stylesheet', href='/stylesheets/screens.css')
+
+  link(rel='stylesheet', href='/tabulator/dist/css/tabulator.min.css')
+  script(src='/tabulator/dist/js/tabulator.min.js', type='text/javascript')
+
+  body
+    div#controls
+      - screenTypeLabel = window.application.screenType.charAt(0).toUpperCase() + window.application.screenType.slice(1);
+      img(src="/images/systems/" + window.application.system + "/logo.png", height="50px")
+      h1 Screens Audit: #{screenTypeLabel}
+      div(class="buttons")
+        input#create(type="button", value="Create Master File") 
+        div#processing
+      p Comparing the Dat file against the existing masterfile: #{window.application.masterfileDetails}
+
+    div#titles

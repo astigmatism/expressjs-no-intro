@@ -8,6 +8,7 @@ block content
 
   body
     div#controls
+      img(src="/images/systems/" + window.application.system + "/logo.png", height="50px")
       h1 Rom File Audit
       p.
         This process compares a dat file against a set of rom files the result of which allows us to generate a "master file" which establishes
@@ -33,7 +34,8 @@ block content
         li
           input#sha1Show(type="checkbox") 
           div(class="label") Show SHA1 Comparison
-      div(class="footer")
+      div(class="buttons")
         input#create(type="button", value="Create Master File")
         div#processing
+      p Comparing the Dat file against the existing masterfile: #{window.application.masterfileDetails}
     div#titles

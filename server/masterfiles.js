@@ -31,7 +31,7 @@ module.exports = new (function() {
         //the last file is the newest and the one to use
         fs.readJson(path.join(dir, files[files.length -1]), (err, content) => {
             if (err) return callback(null);
-            return callback(content);
+            return callback(content, files[files.length -1]);
         });
     };
 
@@ -59,6 +59,24 @@ module.exports = new (function() {
 
         var timestamp = + new Date();
         var filePath = path.join(masterfilesRoot, system, 'boxes-' + type, timestamp + '.json');
+
+        var content = {
+            createdOn: new Date, //human readable
+            data: tableData
+        };
+
+        fs.outputJson(filePath, content, err => {
+            if (err) {
+                return callback(err);
+            }
+            return callback();
+        });
+    };
+
+    this.CreateScreensMasterFile = function(system, type, tableData, callback) {
+
+        var timestamp = + new Date();
+        var filePath = path.join(masterfilesRoot, system, 'screens-' + type, timestamp + '.json');
 
         var content = {
             createdOn: new Date, //human readable

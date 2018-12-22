@@ -55,7 +55,7 @@ module.exports = new (function() {
             filedetails[file].sha1      = sha1File(path.join(romsPath, file));
         });
 
-        Masterfile.Get(system, 'roms', (masterfile) => {
+        Masterfile.Get(system, 'roms', (masterfile, masterfileFileName) => {
         
             Dat.Get(system, (err, datfile, data) => {
 
@@ -67,29 +67,38 @@ module.exports = new (function() {
                     dat[item.name] = item;
                 });       
 
-                Application.FindBestMatchBetweenLists({set: files, sanitize: Sanitize}, {set: datList, sanitize: Sanitize}, 100, (err, matrix, top, dupes) => {
+                Application.FindBestMatchBetweenLists({
+                        set: files, 
+                        sanitize: Sanitize
+                    }, {
+                        set: datList, sanitize: Sanitize
+                    }, 100, (err, topFilenameScoresForThisDatEntry, multipleDatEntriesWhichClaimMatchToOneFile) => {
+
+                    //matrix, top, dupes
                     if (err) return callback(err);
 
-                    //massage dupes for table display
-                    for (var file in dupes) {
-                        for (var i = 0, len = dupes[file].length; i < len; ++i) {
-                            //include dat title
-                            dupes[file][i].title = dat[dupes[file][i].item].title;
+                    //append the title name from the dat into the multipleDatEntriesWhichClaimMatchToOneFile for human reading on the table
+                    for (var filename in multipleDatEntriesWhichClaimMatchToOneFile) {
+                        for (var i = 0, len = multipleDatEntriesWhichClaimMatchToOneFile[filename].length; i < len; ++i) {
+                            var datScoreResult = multipleDatEntriesWhichClaimMatchToOneFile[filename][i];
+                            datScoreResult.title = dat[datScoreResult.datEntry].title;
                         }
                     };
 
-                    var result = [];
-                    async.forEachOf(matrix, (value, key, next) => {
+                    var tableData = [];
+                    async.forEachOf(topFilenameScoresForThisDatEntry, (topScorers, datEntry, next) => {
                         
+                        var topScorer = topScorers[0];
+
                         //calculate different between filesize and expected file size
-                        var diff = filedetails[value.item].stats.size - dat[key].size;
-                        var perc = diff / filedetails[value.item].stats.size * 100;
+                        var diff = filedetails[topScorer.filename].stats.size - dat[datEntry].size;
+                        var perc = diff / filedetails[topScorer.filename].stats.size * 100;
 
                         //respect filtering results to avoid overwhelming the client
                         switch(_resultsFilter) {
 
                             case'score':
-                                if (value.score == 1) {
+                                if (topScorer.score == 1) {
                                     return next();
                                 }
 
@@ -100,29 +109,28 @@ module.exports = new (function() {
                                 //build an understanding of exclusivity - if a duplicate dat entry matched a file,
                                 //we only want to inform on the table if match has a better score with the other dupe
                                 otherMatchHasBetterScore = false;
-                                if (dupes.hasOwnProperty(value.item)) {
-                                    dupes[value.item].forEach(item => {
-                                        if (item.score > value.score) otherMatchHasBetterScore = true;
+                                if (multipleDatEntriesWhichClaimMatchToOneFile.hasOwnProperty(topScorer.filename)) {
+                                    multipleDatEntriesWhichClaimMatchToOneFile[topScorer.filename].forEach(datEntry => {
+                                        if (datEntry.score > topScorer.score) otherMatchHasBetterScore = true;
                                     });
                                 }
 
-                                result.push({
-                                    id: dat[key].title,
-                                    dattitle: dat[key].title,
-                                    datname: dat[key].name,
-                                    datsize: dat[key].size,
-                                    datcrc: dat[key].crc,
-                                    datmd5: dat[key].md5,
-                                    datsha1: dat[key].sha1,
-                                    auditfile: value.item,
-                                    auditscore: value.score,
-                                    auditsize: filedetails[value.item].stats.size,
+                                tableData.push({
+                                    id: dat[datEntry].title,
+                                    dattitle: dat[datEntry].title,
+                                    datname: dat[datEntry].name,
+                                    datsize: dat[datEntry].size,
+                                    datcrc: dat[datEntry].crc,
+                                    datmd5: dat[datEntry].md5,
+                                    datsha1: dat[datEntry].sha1,
+                                    auditfile: topScorer.filename,
+                                    auditscore: topScorer.score,
+                                    auditsize: filedetails[topScorer.filename].stats.size,
                                     auditdiff: perc,
-                                    auditcrc: filedetails[value.item].crc.toUpperCase(),
-                                    auditmd5: filedetails[value.item].md5.toUpperCase(),
-                                    auditsha1: filedetails[value.item].sha1.toUpperCase(),
-                                    exclusive: otherMatchHasBetterScore ? 'Click to see other titles' : '',
-                                    masterfilematch: (masterfile) ? masterfile.data[dat[key].title] : ''
+                                    auditcrc: filedetails[topScorer.filename].crc.toUpperCase(),
+                                    auditmd5: filedetails[topScorer.filename].md5.toUpperCase(),
+                                    auditsha1: filedetails[topScorer.filename].sha1.toUpperCase(),
+                                    masterfileassignment: (masterfile) ? masterfile.data[dat[datEntry].title] : ''
                                 });
                             }
 
@@ -130,7 +138,9 @@ module.exports = new (function() {
                     }, err => {
                         if (err) return callback(err);
 
-                        return callback(null, result, top, dupes);
+                        var masterfileDetails = (masterfile) ? masterfileFileName + '. Created On: ' + new Date(masterfile.createdOn) + '. From Dat File: ' + masterfile.originDatFile : 'Not Created Yet';
+
+                        return callback(null, tableData, topFilenameScoresForThisDatEntry, multipleDatEntriesWhichClaimMatchToOneFile, masterfileDetails);
                     });
                 });
             });

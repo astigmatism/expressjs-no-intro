@@ -31,7 +31,7 @@ router.get('/audit/:system', function(req, res, next) {
 
     MasterFiles.Get(system, 'roms', (masterfile) => {
 
-        Roms.Audit(system, (err, data, topScorers, dupes) => {
+        Roms.Audit(system, (err, tableData, topFilenameScoresForThisDatEntry, multipleDatEnriesWhichClaimMatchToOneFile, masterfileDetails) => {
 
             if (err) return res.status(500).end(err);
 
@@ -40,10 +40,10 @@ router.get('/audit/:system', function(req, res, next) {
                 window: {
                     application: {
                         system: system,
-                        data: data,
-                        top: topScorers,
-                        dupes: dupes,
-                        masterfile: masterfile
+                        tableData: tableData,
+                        masterfileDetails: masterfileDetails,
+                        topFilenameScoresForThisDatEntry: topFilenameScoresForThisDatEntry,
+                        multipleDatEnriesWhichClaimMatchToOneFile: multipleDatEnriesWhichClaimMatchToOneFile
                     }
                 }
             });

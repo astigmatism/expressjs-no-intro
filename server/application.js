@@ -7,15 +7,28 @@ module.exports = new (function() {
 
     var _self = this;
 
-    Array.prototype.remove = function() {
-        var what, a = arguments, L = a.length, ax;
-        while (L && this.length) {
-            what = a[--L];
-            while ((ax = this.indexOf(what)) !== -1) {
-                this.splice(ax, 1);
+    // Array.prototype.remove = function() {
+    //     var what, a = arguments, L = a.length, ax;
+    //     while (L && this.length) {
+    //         what = a[--L];
+    //         while ((ax = this.indexOf(what)) !== -1) {
+    //             this.splice(ax, 1);
+    //         }
+    //     }
+    //     return this;
+    // };
+
+    Array.prototype.PopObjectFromArray = function(comparisonValue, objectMemberToCompare) {
+        for (var i = 0, len = this.length; i < len; ++i) {
+            if (this[i].hasOwnProperty(objectMemberToCompare)) {
+                if (this[i][objectMemberToCompare] == comparisonValue) {
+                    
+                    var removedItem = this.splice(i, 1);
+                    return [this, removedItem[0]];
+                }
             }
-        }
-        return this;
+        };
+        return [this, null];
     };
 
     //consider dl.distance instead but leaving this in out of interest:
@@ -24,154 +37,165 @@ module.exports = new (function() {
         return levenshtein(this, string);
     };
 
-    this.FindBestMatchBetweenLists = function(seta, setb, topScorersCount, callback) {
+    this.FindBestMatchBetweenLists = function(filenamesSet, datSet, topScorersCount, callback) {
 
-        var matrix = BuildScoreMatrix(seta, setb, (err, matrix) => {
-            if (err) return callback(err);
+        //creates a matrix of everything in datSet compared to everything in filenamesSet
+        var eachFilenameScoreForThisDatEntry = BuildScoreMatrix(filenamesSet, datSet);
 
-            var dupes = FindDuplicates(matrix);
-            //var matrix = RemoveDuplicates(matrix);
-            var top = TopScorers(matrix, topScorersCount || 15);
+        var multipleDatEntriesWhichClaimMatchToOneFile = FindDuplicates(eachFilenameScoreForThisDatEntry);         
+        
+        var results = DiscardNonPerfectScores(eachFilenameScoreForThisDatEntry, multipleDatEntriesWhichClaimMatchToOneFile, 1);
+        
+        eachFilenameScoreForThisDatEntry = results[0];
+        multipleDatEntriesWhichClaimMatchToOneFile = results[1];
 
-            //clean up
-            var results = {};
-            for (var item in matrix) {
-                if (matrix[item].length > 0) {
-                    results[item] = matrix[item][0];
-                }
-            };
+        var topFilenameScoresForThisDatEntry = TopScorers(eachFilenameScoreForThisDatEntry, topScorersCount || 15); //creates a reverse matrix -> 
 
-            return callback(null, results, top, dupes);
-        });
+        return callback(null, topFilenameScoresForThisDatEntry, multipleDatEntriesWhichClaimMatchToOneFile);
     };
 
-    var BuildScoreMatrix = function(seta, setb, callback) {
+    var BuildScoreMatrix = function(filenamesSet, datSet) {
 
-        results = {};
-        var lista = seta.set;
-        var listb = setb.set
+        eachFilenameScoreForThisDatEntry = {};
+        var filenames = filenamesSet.set;
+        var datEntries = datSet.set
 
-        async.forEach(listb, function(itemb, nextb) {
+        datEntries.forEach(datEntry => {
 
-            console.log('[Score Matrix] Considering item {' + itemb + '}');
+            console.log('[Score Matrix] Considering item {' + datEntry + '}');
+            var sanitizedDatEntry = datSet.sanitize ? datSet.sanitize(datEntry) : datEntry;
+            eachFilenameScoreForThisDatEntry[datEntry] = [];
 
-            var sanitizedItemb = setb.sanitize ? setb.sanitize(itemb) : itemb;
-            results[itemb] = [];
+            filenames.forEach(filename => {
 
-            async.forEach(lista, function(itema, nexta) {
-
-                var sanitizedItema = seta.sanitize ? seta.sanitize(itema) : itema;
+                var sanitiziedFilename = filenamesSet.sanitize ? filenamesSet.sanitize(filename) : filename;
 
                 result = {
-                    item: itema,
+                    filename: filename,
                     
-                    score: stringSimilarity.compareTwoStrings(sanitizedItema, sanitizedItemb)
-                    //score: levenshtein(sanitizedItema, sanitizedItemb)
-                    //score: dl.distance(sanitizedItema, sanitizedItemb)
+                    score: stringSimilarity.compareTwoStrings(sanitiziedFilename, sanitizedDatEntry)
+                    //score: levenshtein(sanitiziedFilename, sanitizedDatEntry)
+                    //score: dl.distance(sanitiziedFilename, sanitizedDatEntry)
                 };
 
-                if (results[itemb].length == 0) {
-                    results[itemb].push(result);
-                }
-                else {
-                    //walk array until score is higher, then insert before and exit
-                    var inserted = false;
-
-                    //walk backwards
-                    for(var i = results[itemb].length - 1; i > -1; --i) {
-
-                        //if current value is greater, insert behind
-                        if (results[itemb][i].score > result.score) {
-                            results[itemb].splice(i + 1, 0, result);
-                            break;
-                        }
-                        else {
-                            //if the score is greater than everythng in the array, insert at front
-                            if (i == 0) {
-                                results[itemb].splice(0, 0, result);
-                            }
-                        }
-                    };
-                }
-
-                nexta();
-            }, err2 => {
-                if (err2) return callback(err2);
-                nextb();
+                eachFilenameScoreForThisDatEntry[datEntry] = ObjectArraySortedInsert(eachFilenameScoreForThisDatEntry[datEntry], result, 'score');
             });
-        }, err=> {
-            if (err) return callback(err);
-            
-            return callback(null, results);
         });
+        return eachFilenameScoreForThisDatEntry;
     };
 
-    var RemoveDuplicates = function(matrix) {
-        
-        for (var item in matrix) {
-            var results = matrix[item];
-            
-            //if no more, go to next
-            if (results.length == 0) {
-                continue;
-            }
-            var lowestScore = results[0];
+    //creates a list 
+    var TopScorers = function(eachFilenameScoreForThisDatEntry, limit) {
 
-            for (var itemb in matrix) {
-                var resultsb = matrix[itemb];
+        var topFilenameScoresForThisDatEntry = {};
+        for (var filename in eachFilenameScoreForThisDatEntry) {
 
-                if (resultsb.length == 0) {
-                    continue;
-                }
-
-                var lowestScoreb = resultsb[0];
-
-                //as long as this is not the same item but the lowest scoring match is the same thing
-                if (item !== itemb && lowestScoreb.item == lowestScore.item) {
-                    //console.log('[Remove Duplicates] Found Duplicate match for {' + lowestScore.item + '} between {' + item + '} {' + lowestScore.score + '} vs {' + itemb + '} {' + lowestScoreb.score + '}');
-
-                    //which ever has the lower score keeps the match, the other must discard their claim
-                    losingItem = lowestScoreb.score < lowestScore.score ? item : itemb;
-                    winningItem = lowestScoreb.score < lowestScore.score ? itemb : item;
-
-                    console.log('[Remove Dupes] {' + losingItem + '} loses match of {' + lowestScore.item + '} to {' + winningItem + '}');
-
-                    matrix[losingItem].shift();
-
-                    return RemoveDuplicates(matrix); //start again
-                }
-            };
-        };
-        return matrix;
-    };
-
-    var TopScorers = function(matrix, limit) {
-
-        var result = {};
-        for (var item in matrix) {
-
-            result[item] = [];
-            for (var i = 0, len = matrix[item].length; i < len && i < limit; ++i)
-                result[item].push(matrix[item][i]);
+            topFilenameScoresForThisDatEntry[filename] = [];
+            for (var i = 0, len = eachFilenameScoreForThisDatEntry[filename].length; i < len && i < limit; ++i)
+                topFilenameScoresForThisDatEntry[filename].push(eachFilenameScoreForThisDatEntry[filename][i]);
         }
-        return result;
+        return topFilenameScoresForThisDatEntry;
     };
     
-    var FindDuplicates = function(matrix) {
+    var FindDuplicates = function(eachFilenameScoreForThisDatEntry) {
 
-        var dupes = {};
-        for (var item in matrix) {
-            var results = matrix[item];
-            if (results.length > 0) {
-                if (!dupes.hasOwnProperty(results[0].item)) {
-                    dupes[results[0].item] = [];
+        var multipleDatEntriesWhichClaimMatchToOneFile = {};
+
+        for (var datEntry in eachFilenameScoreForThisDatEntry) {
+            
+            var filenameScores = eachFilenameScoreForThisDatEntry[datEntry];
+            
+            if (filenameScores.length > 0) {
+
+                var topScorer = filenameScores[0];
+
+                if (!multipleDatEntriesWhichClaimMatchToOneFile.hasOwnProperty(topScorer.filename)) {
+                    multipleDatEntriesWhichClaimMatchToOneFile[topScorer.filename] = [];
                 }
-                dupes[results[0].item].push({
-                    item: item,
-                    score: results[0].score
-                });
+
+                var insertObject = {
+                    datEntry: datEntry,
+                    score: filenameScores[0].score
+                };
+
+                multipleDatEntriesWhichClaimMatchToOneFile[topScorer.filename] = ObjectArraySortedInsert(multipleDatEntriesWhichClaimMatchToOneFile[topScorer.filename], insertObject, 'score');
             }
         };
-        return dupes;
+
+        return multipleDatEntriesWhichClaimMatchToOneFile;
+    };
+
+    var DiscardNonPerfectScores = function(eachFilenameScoreForThisDatEntry, multipleDatEntriesWhichClaimMatchToOneFile, perfectScore) {
+
+        var foundOtherThatCompeteAgainstAPefectScore = false;
+        for (var filename in multipleDatEntriesWhichClaimMatchToOneFile) {
+            var datEntries = multipleDatEntriesWhichClaimMatchToOneFile[filename];
+
+            //a datEntry must have more than one match to vet others
+            if (datEntries.length > 1) {
+
+                //if a perfect score is defined, we only want to discard other matches WHEN that perfect score is achieved (at 0 since its position has the greatest)
+
+                //the top entry has a perfect score, by definition, nothing else SHOULD match to this
+                if (datEntries[0].score == perfectScore) {
+
+                    console.log('[Perfect Score] ' + datEntries[0].datEntry + ' has a perfect score for ' + filename + ' but has other matches, these will be discarded');
+
+                    //loop other all the other claims
+                    for(var i = 1, len = datEntries.length; i < len; ++i) {
+                        var datEntry = datEntries[i].datEntry;
+
+                        //find the definition in eachFilenameScoreForThisDatEntry
+                        //the other datEntry claiming this filename will be in position 0.
+                        //let's simlply remove this score
+                        eachFilenameScoreForThisDatEntry[datEntry].shift();
+                        foundOtherThatCompeteAgainstAPefectScore = true;
+                    }
+
+                    //make this the only item in the multipleDatEntriesWhichClaimMatchToOneFile
+                    //so as not to suggest it as a better match in the table
+                    multipleDatEntriesWhichClaimMatchToOneFile[filename] = [datEntries[0]];
+
+                }
+            }
+        }
+
+        //run this function as many times as needed to discard all which claim against a perfect score
+        if (foundOtherThatCompeteAgainstAPefectScore) {
+            
+            //rerun this
+            multipleDatEntriesWhichClaimMatchToOneFile = FindDuplicates(eachFilenameScoreForThisDatEntry);
+            
+            //now recurse
+            return DiscardNonPerfectScores(eachFilenameScoreForThisDatEntry, multipleDatEntriesWhichClaimMatchToOneFile, perfectScore);
+        }
+
+        return [eachFilenameScoreForThisDatEntry, multipleDatEntriesWhichClaimMatchToOneFile];
     }
+
+    var ObjectArraySortedInsert = function(array, compareObject, objectMemberToCompare) {
+
+        if (array.length == 0) {
+            array.push(compareObject);
+        }
+        else {
+
+            //walk backwards
+            for(var i = array.length - 1; i > -1; --i) {
+
+                //if current value is greater, insert behind
+                if (array[i][objectMemberToCompare] > compareObject[objectMemberToCompare]) {
+                    array.splice(i + 1, 0, compareObject);
+                    break;
+                }
+                else {
+                    //if the score is greater than everythng in the array, insert at front
+                    if (i == 0) {
+                        array.splice(0, 0, compareObject);
+                    }
+                }
+            };
+        }
+        return array;
+    };
 });
