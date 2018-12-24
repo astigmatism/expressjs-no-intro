@@ -2,6 +2,10 @@ const dl = require('damerau-levenshtein-js');
 const levenshtein = require('levenshtein-edit-distance');
 var stringSimilarity = require('string-similarity');
 const async = require('async');
+const nodeZip = require('node-zip');
+const fs = require('fs-extra');
+const junk = require('junk');
+const path = require('path');
 
 module.exports = new (function() {
 
@@ -197,5 +201,49 @@ module.exports = new (function() {
             };
         }
         return array;
+    };
+
+    this.UnZipAllFiles = function(source, destination, callback) {
+
+        var files;
+
+        //get dir listing
+        try {
+            files = fs.readdirSync(source);
+        }
+        catch (e) {
+            return callback(e.message);
+        }
+
+        files = files.filter(junk.not); //removes DS_Store
+
+        fs.ensureDirSync(destination);
+        fs.emptyDirSync(destination);
+
+        async.eachSeries(files, (file, nextFile) => {
+
+            console.log('[UNZIP] ' + file);
+
+            //read file
+            fs.readFile(path.join(source, file), function(err, buffer) {
+                if (err) return nextFile(err);
+
+                var zip = new nodeZip(buffer);
+
+                //write zip to dest
+                Object.keys(zip.files).forEach(function(filename) {
+                    var content = zip.files[filename].asNodeBuffer();
+                    fs.writeFileSync(path.join(destination, filename), content);
+                    return nextFile();
+                });
+            });
+        }, err => {
+            if (err) return callback(err);
+
+            //empty source dir as a courtesy
+            fs.emptyDirSync(source);
+
+            return callback(null, files.length);
+        });
     };
 });

@@ -6,17 +6,6 @@
 
     });
 
-    // Array.prototype.remove = function() {
-    //     var what, a = arguments, L = a.length, ax;
-    //     while (L && this.length) {
-    //         what = a[--L];
-    //         while ((ax = this.indexOf(what)) !== -1) {
-    //             this.splice(ax, 1);
-    //         }
-    //     }
-    //     return this;
-    // };
-
     //i wrote this. it returns an array, oh well
     Array.prototype.PopObjectFromArray = function(comparisonValue, objectMemberToCompare) {
         for (var i = 0, len = this.length; i < len; ++i) {

@@ -18,16 +18,39 @@ var express = require('express');
 var router = express.Router();
 const config = require('config');
 const MasterFiles = require('../server/masterfiles');
+const Roms = require('../server/roms');
+const Boxes = require('../server/boxes');
+const Screens = require('../server/screens');
 
 router.get('/', function(req, res, next) {
 
     var systems = config.get('systems');
+    var auditDetails = {};
+    var systems = MasterFiles.GetSystemsFromDatDirectory();
+
+    for (var system in systems) {
+        auditDetails[system] = {
+            filecounts: {
+                roms: Roms.CheckForRomsInMedia(system),
+                'boxes-front': Boxes.CheckForFilesInMedia(system, 'front'),
+                'screens-title': Screens.CheckForFilesInMedia(system, 'title'),
+                'screens-shot': Screens.CheckForFilesInMedia(system, 'shot')
+            },
+            masterfiles: {
+                'roms': MasterFiles.Exists(system, 'roms'),
+                'boxes-front': MasterFiles.Exists(system, 'boxes-front'),
+                'screens-title': MasterFiles.Exists(system, 'screens-title'),
+                'screens-shot': MasterFiles.Exists(system, 'screens-shot')
+            }
+        };
+    };
     
     res.render('index', {
         title: 'No-Intro',
         window: {
             application: {
-                systems: systems
+                systems: systems,
+                auditDetails: auditDetails
             }
         }
     });

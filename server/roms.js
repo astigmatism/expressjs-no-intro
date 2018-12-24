@@ -13,6 +13,7 @@ const Masterfile = require('./masterfiles');
 
 const mediaRoot = path.join(__dirname, '../','media');
 const romsRoot = path.join(mediaRoot, 'roms');
+const unzipPath = path.join(mediaRoot, 'to-unzip');
 
 module.exports = new (function() {
 
@@ -24,6 +25,17 @@ module.exports = new (function() {
         name = name.replace(/[\W\(.*\)]/g, ''); //strip out all non-words
         //name = name.replace(/\(.*\)|[\W]/g, ''); //same as above but also all (.*)
         return name;
+    };
+
+    this.UnZipToMedia = function(system, callback) {
+
+        var sourcePath = unzipPath;
+        var destinationPath = path.join(romsRoot, system);
+
+        Application.UnZipAllFiles(sourcePath, destinationPath, (err, fileCount) => {
+            if (err) callback(err);
+            return callback(null, fileCount);
+        });
     };
 
     this.Audit = function(system, callback, _resultsFilter) {
@@ -145,5 +157,18 @@ module.exports = new (function() {
                 });
             });
         });
+    };
+
+    this.CheckForRomsInMedia = function(system) {
+
+        var source = path.join(romsRoot, system);
+        //get dir listing
+        try {
+            files = fs.readdirSync(source);
+        }
+        catch (e) {
+            return null;
+        }
+        return files.length;
     };
 });

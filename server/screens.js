@@ -137,4 +137,17 @@ module.exports = new (function() {
         });
     };
 
+    this.CheckForFilesInMedia = function(system, screenType) {
+
+        var source = path.join(screensRoot, screenType, system);
+        //get dir listing
+        try {
+            files = fs.readdirSync(source);
+        }
+        catch (e) {
+            return null;
+        }
+        return files.length;
+    };
+
 });

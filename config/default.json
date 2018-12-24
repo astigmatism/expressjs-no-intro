@@ -19,6 +19,46 @@
             "key": "vb",
             "name": "Nintendo - Virtual Boy",
             "datFile": "Nintendo - Virtual Boy (20181031-211438)"
+        },
+        "a2600": {
+            "key": "a2600",
+            "name": "Atari - 2600",
+            "datFile": "Atari - 2600 (20180619-181255)"
+        },
+        "a7800": {
+            "key": "a7800",
+            "name": "Atari - 7800",
+            "datFile": "Atari - 7800 (20140326-040142)"
+        },
+        "32x": {
+            "key": "32x",
+            "name": "Sega - 32X",
+            "datFile": "Sega - 32X (20181101-215948)"
+        },
+        "lynx": {
+            "key": "lynx",
+            "name": "Atari - Lynx",
+            "datFile": "Atari - Lynx (20180920-072316)"
+        },
+        "jag": {
+            "key": "jag",
+            "name": "Atari - Jaguar",
+            "datFile": "Atari - Jaguar (J64) (20181127-190832)"
+        },
+        "ws": {
+            "key": "ws",
+            "name": "Bandai - WonderSwan",
+            "datFile": "Bandai - WonderSwan (20180913-192624)"
+        },
+        "wsc": {
+            "key": "wsc",
+            "name": "Bandai - WonderSwan Color",
+            "datFile": "Bandai - WonderSwan Color (20180914-205205)"
+        },
+        "gen": {
+            "key": "gen",
+            "name": "Sega - Mega Drive - Genesis",
+            "datFile": "Sega - Mega Drive - Genesis (20181218-193003)"
         }
     }
 }

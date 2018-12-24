@@ -4,6 +4,7 @@ const path = require('path');
 const async = require('async');
 
 const mediaRoot = path.join(__dirname, '../','media');
+const datsRoot = path.join(mediaRoot, 'dats');
 const masterfilesRoot = path.join(mediaRoot, 'masterfiles')
 
 module.exports = new (function() {
@@ -33,6 +34,41 @@ module.exports = new (function() {
             if (err) return callback(null);
             return callback(content, files[files.length -1]);
         });
+    };
+
+    this.Exists = function(system, type) {
+        
+        var dir = path.join(masterfilesRoot, system, type);
+        if (!fs.pathExistsSync(dir)) {
+            return null;
+        }
+        return fs.readdirSync(dir).filter(fn => fn.endsWith('.json'));
+    };
+
+    this.GetSystemsFromDatDirectory = function(system, type) {
+        var systems = {};
+        fs.readdirSync(datsRoot).forEach(dir => {
+            if (fs.statSync(path.join(datsRoot, dir)).isDirectory()) {
+                var datFiles = fs.readdirSync(path.join(datsRoot, dir)).filter(fn => fn.endsWith('.dat'));
+
+                systems[dir] = {
+                    key: dir,
+                    datFiles: [],
+                    name: ''
+                }
+
+                if (datFiles) { 
+                    
+                    systems[dir].datFiles = datFiles;
+                    
+                    //we can also surmise a name from the dat filename
+                    var name = datFiles[0].split('.').slice(0, -1).join('.'); //also removes file ext
+                    name = name.replace(/\([\d-]*\)/g, '');
+                    systems[dir].name = name.trim();
+                }
+            }
+        });
+        return systems;
     };
 
     this.CreateRomsMasterFile = function(system, tableData, callback) {

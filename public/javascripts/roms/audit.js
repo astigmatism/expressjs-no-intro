@@ -78,6 +78,7 @@
     var RemoveColumnClick = function(e, cell) {
         //alert("Printing row data for: " + cell.getRow().getData().datname);
         cell.getRow().update({ auditfile:''});
+        cell.getRow().reformat();
     };
 
     var RemoveColumnContent = function(cell, formatterParams, onRendered) { //plain text value
@@ -183,8 +184,9 @@
 
         var row = cell.getRow();
         var rowData = row.getData();
+        var auditFileWithoutExt = rowData.auditfile.split('.').slice(0, -1).join('.');
 
-        if (rowData.dattitle == rowData.masterfileassignment) {
+        if (auditFileWithoutExt == rowData.masterfileassignment) {
             row.update({
                 masterfilematch: true
             });

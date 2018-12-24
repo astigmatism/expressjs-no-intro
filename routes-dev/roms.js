@@ -20,6 +20,7 @@ const config = require('config');
 const Roms = require('../server/roms');
 const MasterFiles = require('../server/masterfiles');
 
+
 router.get('/audit/:system', function(req, res, next) {
 
     var system = req.params.system;
@@ -74,6 +75,22 @@ router.post('/audit/:system', function(req, res, next) {
             return res.status(500).json(err);
         }
         return res.status(200).json();
+    });
+});
+
+router.get('/unzip/:system', function(req, res, next) {
+
+    var system = req.params.system;
+
+    if (!system) {
+        return res.status(400).end('err 0');
+    }
+
+    Roms.UnZipToMedia(system, (err, fileCount) => {
+        if (err) {
+            return res.status(500).json(err);
+        }
+        return res.status(200).json('Finished. ' + fileCount + ' files unzipped.');
     });
 });
 
