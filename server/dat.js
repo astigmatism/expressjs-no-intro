@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const config = require('config');
 const parseString = require('xml2js').parseString;
+const junk = require('junk');
 
 const mediaRoot = path.join(__dirname, '../','media');
 const datRoot = path.join(mediaRoot, '/dats');
@@ -12,16 +13,24 @@ module.exports = new (function() {
 
     this.Get = function(system, callback) {
 
-        var currentDatFile;
+        var dir = path.join(datRoot, system);
 
         try {
-            currentDatFile = config.get('systems.' + system + '.datFile');
+            var files = fs.readdirSync(dir);
         }
         catch (e) {
-            return callback(e.message);
+            return callback(null);
         }
 
-        var datFilePath = path.join(datRoot, system, currentDatFile + '.dat');
+        files = files.filter(junk.not); //removes DS_Store
+
+        //empty dir catch
+        if (files.length == 0) {
+            return callback(null);
+        }
+
+        var currentDatFile = files[files.length - 1];
+        var datFilePath = path.join(datRoot, system, currentDatFile); //always take last file as most recent??
         var xml = fs.readFileSync(datFilePath, 'utf8');
 
         parseString(xml, function (err, result) {

@@ -58,6 +58,8 @@ module.exports = new (function() {
 
         files = files.filter(junk.not); //removes DS_Store
 
+        if (files.length === 0) return callback('no files in ' + romsPath);
+
         //get file sizes and crc
         files.forEach(file => {
             filedetails[file]           = {};

@@ -24,7 +24,6 @@ const Screens = require('../server/screens');
 
 router.get('/', function(req, res, next) {
 
-    var systems = config.get('systems');
     var auditDetails = {};
     var systems = MasterFiles.GetSystemsFromDatDirectory();
 
