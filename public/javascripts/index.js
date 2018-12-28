@@ -13,11 +13,11 @@
             ],
             columns: [
                 { title:'System Name', field:'name', sorter:'string', width:400, editor:true },
-                { title:'UnZip to Media', field:'unzip', formatter: UnZipToMediaFormatter},
-                { title:'Rom Audit', field:'romaudit', formatter: RomsAuditFormatter },
-                { title:'Box Front Audit', field:'boxfrontaudit', formatter: BoxFrontAuditFormatter },
-                { title:'Title Screen Audit', field:'titlescreenaudit', formatter: TitleScreenAuditFormatter },
-                { title:'Screenshot Audit', field:'screenshotaudit', formatter: ScreenshotAuditFormatter }
+                { title:'UnZip to Media Folder', field:'unzip', width: 150, formatter: UnZipToMediaFormatter},
+                { title:'Rom Audit', field:'romaudit', formatter: AuditFormatter, formatterParams:{ type: 'roms' }},
+                { title:'Box Front Audit', field:'boxfrontaudit', formatter: AuditFormatter, formatterParams:{ type: 'boxes/front' }},
+                { title:'Title Screen Audit', field:'titlescreenaudit', formatter: AuditFormatter, formatterParams:{ type: 'screens/title' }},
+                { title:'Screenshot Audit', field:'screenshotaudit', formatter: AuditFormatter, formatterParams:{ type: 'screens/shot' }},
             ]
         });
 
@@ -30,30 +30,30 @@
     var UnZipToMediaFormatter = function(cell) {
         
         var id = cell.getData().id;
-        return '<div>Files found in /media/roms/' + id + '/: ' + _auditDetails[id].filecounts.roms + '</div><a href="/dev/roms/unzip/' + id + '" target="_blank">Unzip to Media Folder</a>';
+        //return '<div>Files found in /media/roms/' + id + '/: ' + _auditDetails[id].filecounts.roms + '</div><a href="/dev/roms/unzip/' + id + '" target="_blank">Unzip to Media Folder</a>';
+        return '<a href="/dev/roms/unzip/' + id + '" target="_blank">Unzip to Media Folder</a>';
     };
 
-    var RomsAuditFormatter = function(cell) {
+    var AuditFormatter = function(cell, obj) {
 
+        var type = obj.type;
         var id = cell.getData().id;
-        return '<div>Has a Roms Masterfile Already: ' + _auditDetails[id].masterfiles.roms + '</div><a href="/dev/roms/audit/' + id + '" target="_blank">Audit Now</a>';
-    };
+        var existingMasterfile = _auditDetails[id].masterfiles[type];
+        var auditFileCount = _auditDetails[id].filecounts[type];
 
-    var BoxFrontAuditFormatter = function(cell) {
+        var auditFileCountMessage = 'Files not present';
+        if (auditFileCount) {
+            auditFileCountMessage = 'Number of files ready for audit in /media/' + type + '/' + id + ': ' + auditFileCount;
+        }
 
-        var id = cell.getData().id;
-        return '<div>Has a Box Front Masterfile Already: ' + _auditDetails[id].masterfiles['boxes-front'] + '</div><div>Has Art Ready in /media/boxes/front: ' + _auditDetails[id].filecounts['boxes-front'] + '</div><a href="/dev/boxes/audit/front/' + id + '" target="_blank">Audit Now</a>';
-    };
+        var masterfileMessage = 'No existing masterfile';
+        if (existingMasterfile) {
+            masterfileMessage = 'Preexisting masterfile: ' + existingMasterfile;
+        }
 
-    var TitleScreenAuditFormatter = function(cell) {
-
-        var id = cell.getData().id;
-        return '<div>Has a Title Screen Masterfile Already: ' + _auditDetails[id].masterfiles['screens-title'] + '</div><div>Has Art Ready in /media/screens/title: ' + _auditDetails[id].filecounts['screens-title'] + '</div><a href="/dev/screens/audit/title/' + id + '" target="_blank">Audit Now</a>';
-    };
-
-    var ScreenshotAuditFormatter = function(cell) {
-
-        var id = cell.getData().id;
-        return '<div>Has a Screenshot Masterfile Already: ' + _auditDetails[id].masterfiles['screens-shot'] + '</div><div>Has Art Ready in /media/screens/shot: ' + _auditDetails[id].filecounts['screens-shot'] + '</div><a href="/dev/screens/audit/shot/' + id + '" target="_blank">Audit Now</a>';
+        return  '<div class="' + (auditFileCount ? 'yes' : 'no') + '">' + auditFileCountMessage + '</div>' + 
+                '<div class="' + (existingMasterfile ? 'yes' : 'warn') + '">' + masterfileMessage + '</div>' + 
+                '<a href="/dev/roms/audit/' + id + '" target="_blank">Audit Now</a>' + 
+                '';
     };
 })();

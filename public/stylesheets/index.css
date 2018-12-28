@@ -4,3 +4,15 @@
     padding: 10px;
     font-size: 12px;
 }
+
+.yes {
+    background-color: lightgreen;
+}
+
+.no {
+    background-color: lightcoral;
+}
+
+.warn {
+    background-color: lightyellow;
+}

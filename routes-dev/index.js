@@ -31,15 +31,15 @@ router.get('/', function(req, res, next) {
         auditDetails[system] = {
             filecounts: {
                 roms: Roms.CheckForRomsInMedia(system),
-                'boxes-front': Boxes.CheckForFilesInMedia(system, 'front'),
-                'screens-title': Screens.CheckForFilesInMedia(system, 'title'),
-                'screens-shot': Screens.CheckForFilesInMedia(system, 'shot')
+                'boxes/front': Boxes.CheckForFilesInMedia(system, 'front'),
+                'screens/title': Screens.CheckForFilesInMedia(system, 'title'),
+                'screens/shot': Screens.CheckForFilesInMedia(system, 'shot')
             },
             masterfiles: {
                 'roms': MasterFiles.Exists(system, 'roms'),
-                'boxes-front': MasterFiles.Exists(system, 'boxes-front'),
-                'screens-title': MasterFiles.Exists(system, 'screens-title'),
-                'screens-shot': MasterFiles.Exists(system, 'screens-shot')
+                'boxes/front': MasterFiles.Exists(system, 'boxes-front'),
+                'screens/title': MasterFiles.Exists(system, 'screens-title'),
+                'screens/shot': MasterFiles.Exists(system, 'screens-shot')
             }
         };
     };
