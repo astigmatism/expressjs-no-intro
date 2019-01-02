@@ -1,4 +1,4 @@
-media/roms
-media/boxes/front
-media/boxes/full
-media/screens
+media/roms/*
+media/boxes/front/*
+media/boxes/full/*
+media/screens/*
