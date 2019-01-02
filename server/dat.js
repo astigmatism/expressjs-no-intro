@@ -11,7 +11,7 @@ module.exports = new (function() {
 
     var _self = this;
 
-    this.Get = function(system, callback) {
+    this.GetNewestFile = function(system) {
 
         var dir = path.join(datRoot, system);
 
@@ -19,17 +19,27 @@ module.exports = new (function() {
             var files = fs.readdirSync(dir);
         }
         catch (e) {
-            return callback(null);
+            return null;
         }
 
         files = files.filter(junk.not); //removes DS_Store
 
         //empty dir catch
         if (files.length == 0) {
-            return callback(null);
+            return null;
         }
 
-        var currentDatFile = files[files.length - 1];
+        return files[files.length - 1];
+    };
+
+    this.ParseLatest = function(system, callback) {
+
+        var currentDatFile = this.GetNewestFile(system);
+
+        if (!currentDatFile) {
+            return callback('no dat files');
+        }
+
         var datFilePath = path.join(datRoot, system, currentDatFile); //always take last file as most recent??
         var xml = fs.readFileSync(datFilePath, 'utf8');
 

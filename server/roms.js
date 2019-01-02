@@ -71,7 +71,7 @@ module.exports = new (function() {
 
         Masterfile.Get(system, 'roms', (masterfile, masterfileFileName) => {
         
-            Dat.Get(system, (err, datfile, data) => {
+            Dat.ParseLatest(system, (err, datfile, data) => {
 
                 //compose list for comparison
                 var datList = [];

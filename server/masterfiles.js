@@ -3,9 +3,11 @@ const config = require('config');
 const path = require('path');
 const async = require('async');
 
+const Dat = require('./dat');
+
 const mediaRoot = path.join(__dirname, '../','media');
 const datsRoot = path.join(mediaRoot, 'dats');
-const masterfilesRoot = path.join(mediaRoot, 'masterfiles')
+const masterfilesRoot = path.join(mediaRoot, 'masterfiles');
 
 module.exports = new (function() {
 
@@ -73,7 +75,7 @@ module.exports = new (function() {
 
     this.CreateRomsMasterFile = function(system, tableData, callback) {
 
-        var currentDatFile = config.get('systems.' + system + '.datFile');
+        var currentDatFile = Dat.GetNewestFile(system);
         var timestamp = + new Date();
         var filePath = path.join(masterfilesRoot, system, 'roms', timestamp + '.json');
 
