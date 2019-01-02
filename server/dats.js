@@ -4,12 +4,38 @@ const config = require('config');
 const parseString = require('xml2js').parseString;
 const junk = require('junk');
 
-const mediaRoot = path.join(__dirname, '../','media');
+const mediaRoot = path.join(__dirname, '../','data');
 const datRoot = path.join(mediaRoot, '/dats');
 
 module.exports = new (function() {
 
     var _self = this;
+
+    this.GetSystemsWithDat = function(system, type) {
+        var systems = {};
+        fs.readdirSync(datRoot).forEach(dir => {
+            if (fs.statSync(path.join(datRoot, dir)).isDirectory()) {
+                var datFiles = fs.readdirSync(path.join(datRoot, dir)).filter(fn => fn.endsWith('.dat'));
+
+                systems[dir] = {
+                    key: dir,
+                    datFiles: [],
+                    name: ''
+                }
+
+                if (datFiles) { 
+                    
+                    systems[dir].datFiles = datFiles;
+                    
+                    //we can also surmise a name from the dat filename
+                    var name = datFiles[0].split('.').slice(0, -1).join('.'); //also removes file ext
+                    name = name.replace(/\([\d-]*\)/g, '');
+                    systems[dir].name = name.trim();
+                }
+            }
+        });
+        return systems;
+    };
 
     this.GetNewestFile = function(system) {
 

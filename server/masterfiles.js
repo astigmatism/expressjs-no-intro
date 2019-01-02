@@ -3,11 +3,11 @@ const config = require('config');
 const path = require('path');
 const async = require('async');
 
-const Dat = require('./dat');
+const Dat = require('./dats');
 
-const mediaRoot = path.join(__dirname, '../','media');
-const datsRoot = path.join(mediaRoot, 'dats');
-const masterfilesRoot = path.join(mediaRoot, 'masterfiles');
+const dataRoot = path.join(__dirname, '../','data');
+const datsRoot = path.join(dataRoot, 'dats');
+const masterfilesRoot = path.join(dataRoot, 'masterfiles');
 
 module.exports = new (function() {
 

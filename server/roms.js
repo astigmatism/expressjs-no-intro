@@ -7,7 +7,7 @@ const md5File = require('md5-file');
 const sha1File = require('sha1-file');
 const junk = require('junk');
 
-const Dat = require('./dat');
+const Dat = require('./dats');
 const Application = require('./application');
 const Masterfile = require('./masterfiles');
 

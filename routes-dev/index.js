@@ -16,8 +16,8 @@
  */
 var express = require('express');
 var router = express.Router();
-const config = require('config');
-const MasterFiles = require('../server/masterfiles');
+const Dats = require('../server/dats');
+const Masterfiles = require('../server/masterfiles');
 const Roms = require('../server/roms');
 const Boxes = require('../server/boxes');
 const Screens = require('../server/screens');
@@ -25,7 +25,7 @@ const Screens = require('../server/screens');
 router.get('/', function(req, res, next) {
 
     var auditDetails = {};
-    var systems = MasterFiles.GetSystemsFromDatDirectory();
+    var systems = Dats.GetSystemsWithDat();
 
     for (var system in systems) {
         auditDetails[system] = {
@@ -36,10 +36,10 @@ router.get('/', function(req, res, next) {
                 'screens/shot': Screens.CheckForFilesInMedia(system, 'shot')
             },
             masterfiles: {
-                'roms': MasterFiles.Exists(system, 'roms'),
-                'boxes/front': MasterFiles.Exists(system, 'boxes-front'),
-                'screens/title': MasterFiles.Exists(system, 'screens-title'),
-                'screens/shot': MasterFiles.Exists(system, 'screens-shot')
+                'roms': Masterfiles.Exists(system, 'roms'),
+                'boxes/front': Masterfiles.Exists(system, 'boxes-front'),
+                'screens/title': Masterfiles.Exists(system, 'screens-title'),
+                'screens/shot': Masterfiles.Exists(system, 'screens-shot')
             }
         };
     };
